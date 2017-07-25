@@ -346,14 +346,14 @@ public class OzingaLoginProvider extends AbstractSPCustomProviderHandler {
         } else {
             writeLogMessage("Ldap login failed...", LOG_DEBUG, wLogLevel);
 
-            int wDBNumber = 0;
+            int wDBNumber;
             try {
-                wDBNumber = new Integer(wProps.getProperty(DB_COUNT_KEY));
+                    wDBNumber = Integer.valueOf(wProps.getProperty(DB_COUNT_KEY));
             } catch (Exception wErr) {
-                throw new SPException("Error logging in. Invalid setting for DB Count Key.");
+                throw new SPException(MessageFormat.format("Error logging in. Invalid setting for DB Count Key: {0}", wProps.getProperty(DB_COUNT_KEY)));
             }
 
-            for (int i=1; i<= wDBNumber; i++) {
+            for (int i=1; i< wDBNumber; i++) {
 
                 DBLoginResponse wLoginResponse = loginWithDB(i, pUser, pPassword, wReturnBuffer, wProps, wLogLevel);
 
@@ -438,7 +438,7 @@ public class OzingaLoginProvider extends AbstractSPCustomProviderHandler {
 
                 wConn = DriverManager.getConnection(wDBURL, wDBUser, wDBPassword);
                 // Use PreparedStatement to avoid SQL Injection Attack
-                String wSQL = "{call dbo.spSysAuthenticate(?, ?, ?, ?)}";
+                String wSQL = "{call spSysAuthenticate(?, ?, ?, ?)}";
                 wCS = wConn.prepareCall(wSQL);
                 wCS.setString(1, pUser);
                 wCS.setString(2, pPassword);
@@ -469,9 +469,8 @@ public class OzingaLoginProvider extends AbstractSPCustomProviderHandler {
             } catch (SPException wExc) {
                 throw wExc;
             } catch (Throwable wExc) {
-                writeLogMessage("Error logging in: " + wExc.getMessage(), LOG_ERROR,
-                        wLogLevel);
-                throw new SPException("Error logging in.");
+                writeLogMessage("Error logging in: " + wExc.getMessage(), LOG_ERROR, wLogLevel);
+                throw new SPException(MessageFormat.format("Error logging in. ::: {0} ::: {1}", wRepsonse.SPResponse, wRepsonse.BreakDBLoop));
             }
         }
         return wRepsonse;
